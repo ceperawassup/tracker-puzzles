@@ -1,5 +1,7 @@
 import sqlite3
 from datetime import date, timedelta
+from collections import defaultdict
+from config import TRACKED_USERS, PLAYERS   # <-- добавлен импорт
 
 DB_NAME = "activity.db"
 
@@ -7,7 +9,8 @@ def show_last_week():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     today = date.today()
-    week_ago = today - timedelta(days=6)  # последние 7 дней, включая сегодня
+    week_ago = today - timedelta(days=6)
+
     c.execute('''
         SELECT username, date, puzzles_count
         FROM daily_puzzles
@@ -21,16 +24,16 @@ def show_last_week():
         print("Нет данных за последние 7 дней.")
         return
 
-    # Готовим таблицу: {username: {date: count, ...}}
-    from collections import defaultdict
     user_data = defaultdict(lambda: defaultdict(int))
     for user, d, cnt in rows:
         user_data[user][d] += cnt
 
-    # Выводим по дням для каждого пользователя
     print(f"Активность по дням с {week_ago} по {today}:\n")
-    for user in sorted(user_data.keys()):
-        print(f"--- {user} ---")
+    # Сортируем пользователей по алфавиту отображаемых имён
+    sorted_users = sorted(user_data.keys(), key=lambda u: PLAYERS.get(u, u).lower())
+    for user in sorted_users:
+        display_name = PLAYERS.get(user, user)
+        print(f"--- {display_name} ---")
         total_week = 0
         for i in range(7):
             day = week_ago + timedelta(days=i)
