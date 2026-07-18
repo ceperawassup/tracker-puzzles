@@ -9,6 +9,9 @@ PLAYERS = {
     "patronchik": "Сергей",
     # добавь остальных по необходимости
 }
+# логин дочери на Lichess
+DAUGHTER = "sweet_bun"
 
 # Автоматический список логинов (не трогай)
 TRACKED_USERS = list(PLAYERS.keys())
+
