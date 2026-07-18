@@ -12,7 +12,9 @@ def init_db():
         CREATE TABLE IF NOT EXISTS daily_puzzles (
             username TEXT,
             date TEXT,
-            puzzles_count INTEGER,
+            puzzles_total INTEGER DEFAULT 0,
+            puzzles_win INTEGER DEFAULT 0,
+            puzzles_loss INTEGER DEFAULT 0,
             PRIMARY KEY (username, date)
         )
     ''')
@@ -32,26 +34,27 @@ def fetch_daily_puzzles(username):
         puzzles = day_entry.get("puzzles")
         if not interval or not puzzles:
             continue
-        # Преобразуем start-метку в дату (UTC)
         start_ms = interval.get("start")
         if not start_ms:
             continue
         date_obj = datetime.fromtimestamp(start_ms / 1000, tz=timezone.utc)
         date_str = date_obj.strftime("%Y-%m-%d")
-        # Суммируем все попытки за день
         score = puzzles.get("score", {})
-        total = score.get("win", 0) + score.get("loss", 0) + score.get("draw", 0)
+        win = score.get("win", 0)
+        loss = score.get("loss", 0)
+        total = win + loss
         if total > 0:
-            entries.append((username, date_str, total))
+            entries.append((username, date_str, total, win, loss))
     return entries
 
 def save_entries(conn, entries):
     c = conn.cursor()
-    for username, date_str, count in entries:
+    for username, date_str, total, win, loss in entries:
         c.execute('''
-            INSERT OR REPLACE INTO daily_puzzles (username, date, puzzles_count)
-            VALUES (?, ?, ?)
-        ''', (username, date_str, count))
+            INSERT OR REPLACE INTO daily_puzzles
+            (username, date, puzzles_total, puzzles_win, puzzles_loss)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (username, date_str, total, win, loss))
     conn.commit()
 
 def main():
@@ -62,11 +65,10 @@ def main():
         if entries:
             save_entries(conn, entries)
             print(f"  Сохранено дней: {len(entries)}")
-            # Для наглядности выведем последние 3 дня
             for e in sorted(entries, reverse=True)[:3]:
-                print(f"    {e[1]}: {e[2]} задач")
+                print(f"    {e[1]}: {e[2]} задач (правильно {e[3]})")
         else:
-            print("  Нет данных (активность не найдена)")
+            print("  Нет данных")
     conn.close()
     print("Готово.")
 

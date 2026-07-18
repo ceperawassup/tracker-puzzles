@@ -5,7 +5,7 @@ PLAYERS = {
     "vasilisa_ukhta": "Василиса",
     "tasya_28": "Таисия",
     "hondrova_varvara": "Варвара",
-    "Makovtsova-2016": "Маковцева",
+    "makovtsova-2016": "Маковцева",
     "patronchik": "Сергей",
     # добавь остальных по необходимости
 }
